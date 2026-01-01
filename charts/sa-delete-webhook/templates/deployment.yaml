@@ -45,7 +45,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
+            - name: tls
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           {{- with .Values.livenessProbe }}
@@ -60,12 +60,38 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
+          env:
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: SDW_PORT
+              value: "{{ .Values.webhook.port | default 8443 }}"
+            - name: SDW_CERT_FILE
+              value: /etc/ssl/certs/srv/tls.crt
+            - name: SDW_KEY_FILE
+              value: /etc/ssl/certs/srv/tls.key
+          {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+          volumeMounts:
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/ca-certificates.crt
+              subPath: ca-certificates.crt
+            - name: server-certs
+              mountPath: /etc/ssl/certs/srv/
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       volumes:
+        - name: server-certs
+          secret:
+            secretName: {{ include "sa-delete-webhook.fullname" . }}-tls
+        - name: ca-certificates
+          configMap:
+            name: {{ .Values.cabundle.configMap.name }}
+            items:
+            - key: {{ .Values.cabundle.configMap.key }}
+              path: ca-certificates.crt
+       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}

@@ -3,7 +3,6 @@ kind: Certificate
 metadata:
   name: {{ include "sa-delete-webhook.fullname" . }}-tls
   namespace: {{ .Release.Namespace }}
-  anno
 spec:
   secretName: {{ include "sa-delete-webhook.fullname" . }}-tls
   duration: 8760h # 1 year

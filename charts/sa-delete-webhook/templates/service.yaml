@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: tls
       protocol: TCP
-      name: http
+      name: tls
   selector:
     {{- include "sa-delete-webhook.selectorLabels" . | nindent 4 }}
