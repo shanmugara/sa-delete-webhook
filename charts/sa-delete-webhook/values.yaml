@@ -148,3 +148,4 @@ cabundle:
 webhook:
   injectCAFrom: ""
   port: 8443
+  scheme: HTTPS
