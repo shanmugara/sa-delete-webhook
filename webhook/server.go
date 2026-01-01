@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/shanmugara/sa-delete-webhook/webhook/admission"
 	"github.com/sirupsen/logrus"
@@ -28,6 +29,8 @@ func RunWebhookServer(ctx context.Context, certFile, keyFile string, port int) e
 	Logger.Infof("Starting webhook server on port %d", port)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/validate", validateSa)
+	mux.HandleFunc("/healthz", healthCheck)
+	mux.HandleFunc("/readyz", readinessCheck)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
@@ -45,7 +48,9 @@ func RunWebhookServer(ctx context.Context, certFile, keyFile string, port int) e
 	select {
 	case <-ctx.Done():
 		Logger.Info("Shutdown signal received, shutting down webhook server...")
-		shutdownCtx := ctx
+		// Create a new context with timeout for graceful shutdown
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		return server.Shutdown(shutdownCtx)
 	case err := <-errCh:
 		if err != nil && err != http.ErrServerClosed {
@@ -134,4 +139,16 @@ func parseRequest(r http.Request) (*admissionv1.AdmissionReview, error) {
 	}
 
 	return &a, nil
+}
+
+// healthCheck returns 200 OK if the server is running
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
+// readinessCheck returns 200 OK if the server is ready to accept requests
+func readinessCheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Ready"))
 }

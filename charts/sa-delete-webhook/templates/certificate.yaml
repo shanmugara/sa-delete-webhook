@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "sa-delete-webhook.fullname" . }}-tls
+  namespace: {{ .Release.Namespace }}
+  anno
+spec:
+  secretName: {{ include "sa-delete-webhook.fullname" . }}-tls
+  duration: 8760h # 1 year
+  renewBefore: 360h # 15 days
+  subject:
+    organizations:
+      - omegaworld.net
+  commonName: {{ include "sa-delete-webhook.fullname" . }}.{{ .Release.Namespace }}.svc
+  dnsNames:
+    - {{ include "sa-delete-webhook.fullname" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "sa-delete-webhook.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    kind: {{ .Values.certificate.issuerRef.kind | default "Issuer" }}
+    group: {{ .Values.certificate.issuerRef.group | default "cert-manager.io" }}
