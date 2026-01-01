@@ -144,7 +144,7 @@ cabundle:
     name: omega-bundle
     key: root-certs.pem
 
-# CA injection annotation for the ValidatingWebhookConfiguration
+# webhook configurations
 webhook:
   injectCAFrom: ""
   port: 8443
