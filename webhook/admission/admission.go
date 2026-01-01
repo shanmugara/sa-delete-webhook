@@ -42,7 +42,7 @@ func (a *Admitter) Sa() (*corev1.ServiceAccount, error) {
 	}
 
 	sa := corev1.ServiceAccount{}
-	if err := json.Unmarshal(a.Request.Object.Raw, &sa); err != nil {
+	if err := json.Unmarshal(a.Request.OldObject.Raw, &sa); err != nil {
 		a.Logger.Error("Failed to unmarshal the ServiceAccount object")
 		return nil, err
 	}

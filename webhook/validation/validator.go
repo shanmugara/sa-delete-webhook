@@ -79,12 +79,18 @@ func (v *CheckInUseValidator) CheckForPods(sa *corev1.ServiceAccount) (bool, err
 	}
 
 	// Check if any pod is using the ServiceAccount
+	podsList := []string{}
 	podsUsingSA := false
 	for _, pod := range podList.Items {
 		if pod.Spec.ServiceAccountName == name {
+			podsList = append(podsList, pod.Name)
 			podsUsingSA = true
-			break
 		}
+	}
+	if podsUsingSA {
+		v.Logger.Infof("ServiceAccount %s is used by Pods: %v", name, podsList)
+	} else {
+		v.Logger.Infof("No Pods are using ServiceAccount %s", name)
 	}
 
 	return podsUsingSA, nil

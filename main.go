@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	server "github.com/shanmugara/sa-delete-webhook/webhook"
@@ -27,15 +28,21 @@ func main() {
 	loggerEntry := logrus.NewEntry(logger)
 	loggerEntry.Info("Initializing SA Delete Webhook Server")
 
-	pflag.StringVar(&certFile, "cert-file", "cert.crt", "TLS Cert file for the server")
+	pflag.StringVar(&certFile, "cert-file", "cert.pem", "TLS Cert file for the server")
 	pflag.StringVar(&keyFile, "key-file", "key.key", "TLS Key file for the server")
 	pflag.IntVar(&port, "port", 8443, "Port for the webhook server")
 
-	viper.BindPFlags(pflag.CommandLine)
+	pflag.Parse()
 	viper.SetEnvPrefix("SDW")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 
-	pflag.Parse()
+	pflag.VisitAll(func(f *pflag.Flag) {
+		if f.Changed {
+			viper.Set(f.Name, f.Value.String())
+		}
+	})
+
 	certFile = viper.GetString("cert-file")
 	keyFile = viper.GetString("key-file")
 	port = viper.GetInt("port")
